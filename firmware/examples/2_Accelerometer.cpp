@@ -92,8 +92,8 @@ int batteryStatus(String command){
     // the String::format("%f.2") part gives us a string to publish,
     // but with only 2 decimal points to save space
     Particle.publish("B", 
-          "v:" + String::format("%f.2",fuel.getVCell()) + 
-          ",c:" + String::format("%f.2",fuel.getSoC()),
+          "v:" + String::format("%.2f",fuel.getVCell()) + 
+          ",c:" + String::format("%.2f",fuel.getSoC()),
           60, PRIVATE
     );
     // if there's more than 10% of the battery left, then return 1
