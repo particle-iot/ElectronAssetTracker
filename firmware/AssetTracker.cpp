@@ -6,7 +6,7 @@
 //#define mySerial Serial1
 //Adafruit_GPS gps(&mySerial);
 Adafruit_GPS gps = Adafruit_GPS();
-Adafruit_LIS3DH accel = Adafruit_LIS3DH(A2, A5, A4, A3);
+Adafruit_LIS3DH accel = Adafruit_LIS3DH(A2);
 
 AssetTracker::AssetTracker(){
 
@@ -112,6 +112,13 @@ int AssetTracker::readXYZmagnitude(){
     return magnitude;
 }
 
+bool AssetTracker::setupLowPowerWakeMode(uint8_t movementThreshold) {
+	return accel.setupLowPowerWakeMode(movementThreshold);
+}
+
+uint8_t AssetTracker::clearAccelInterrupt() {
+	return accel.clearInterrupt();
+}
 
 
 /***********************************
@@ -746,11 +753,8 @@ void Adafruit_LIS3DH::read(void) {
     z = Wire.read(); z |= ((uint16_t)Wire.read()) << 8;
   } else {
     if (_sck == -1)
-      //SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-      SPI.setBitOrder(MSBFIRST);
-      SPI.setClockSpeed(500000);
-      SPI.setDataMode(SPI_MODE0);
-      
+      beginTransaction();
+
     digitalWrite(_cs, LOW);
     spixfer(LIS3DH_REG_OUT_X_L | 0x80 | 0x40); // read multiple, bit 7&6 high
 
@@ -760,7 +764,7 @@ void Adafruit_LIS3DH::read(void) {
 
     digitalWrite(_cs, HIGH);
     if (_sck == -1)
-      SPI.end();              // release the SPI bus 
+    	endTransaction();
 
   }
   uint8_t range = getRange();
@@ -799,19 +803,17 @@ uint16_t Adafruit_LIS3DH::readADC(uint8_t adc) {
     Wire.requestFrom(_i2caddr, 2);
     value = Wire.read();  value |= ((uint16_t)Wire.read()) << 8;
   } else {
-    if (_sck == -1)
-      //SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-    SPI.setBitOrder(MSBFIRST);
-      SPI.setClockSpeed(500000);
-      SPI.setDataMode(SPI_MODE0);
-    digitalWrite(_cs, LOW);
+	if (_sck == -1)
+	  beginTransaction();
+
+	digitalWrite(_cs, LOW);
     spixfer(reg | 0x80 | 0x40); // read multiple, bit 7&6 high
 
     value = spixfer(); value |= ((uint16_t)spixfer()) << 8;
 
     digitalWrite(_cs, HIGH);
     if (_sck == -1)
-      SPI.end();              // release the SPI bus 
+    	endTransaction();
   }
 
   return value;
@@ -906,6 +908,91 @@ void Adafruit_LIS3DH::getSensor(sensor_t *sensor) {
   sensor->resolution  = 0;             
 }
 
+/**************************************************************************/
+/*!
+    @brief  Enable wake-on-move mode
+
+    The movementThreshold value default is 16. Lower values are more sensitive.
+*/
+/**************************************************************************/
+
+bool Adafruit_LIS3DH::setupLowPowerWakeMode(uint8_t movementThreshold) {
+
+	// Enable 10 Hz, low power, with XYZ detection enabled
+	writeRegister8(LIS3DH_REG_CTRL1, LIS3DH_CTRL_REG1_ODR1 | LIS3DH_CTRL_REG1_LPEN | LIS3DH_CTRL_REG1_ZEN | LIS3DH_CTRL_REG1_YEN | LIS3DH_CTRL_REG1_XEN);
+
+	// High pass filters disabled
+	// Enable reference mode LIS3DH_CTRL_REG2_HPM0 | LIS3DH_CTRL_REG2_HPIS1
+	// Tried enabling CTRL_REG2_HPM0 | CTRL_REG2_HPM1 for auto-reset, did not seem to help
+	writeRegister8(LIS3DH_REG_CTRL2, 0);
+
+	// Enable INT1
+	writeRegister8(LIS3DH_REG_CTRL3, LIS3DH_CTRL_REG3_I1_INT1);
+
+	// Disable high resolution mode
+	writeRegister8(LIS3DH_REG_CTRL4, 0);
+
+	// Page 12 of the app note says to do this last, but page 25 says to do them in order.
+	// Disable FIFO, enable latch interrupt on INT1_SRC
+	writeRegister8(LIS3DH_REG_CTRL5, LIS3DH_CTRL_REG5_LIR_INT1);
+
+	// CTRL_REG6_H_LACTIVE means active low, not needed here
+	writeRegister8(LIS3DH_REG_CTRL6, 0);
+
+	// In normal mode, reading the reference register sets it for the current normal force
+	// (the normal force of gravity acting on the device)
+	readRegister8(LIS3DH_REG_REFERENCE);
+
+	// 250 mg threshold = 16
+	writeRegister8(LIS3DH_REG_INT1THS, movementThreshold);
+
+	//
+	writeRegister8(LIS3DH_REG_INT1DUR, 0);
+
+
+	if (intPin >= 0) {
+		// There are instructions to set the INT1_CFG in a loop in the appnote on page 24. As far
+		// as I can tell this never works. Merely setting the INT1_CFG does not ever generate an
+		// interrupt for me.
+
+		// Remember the INT1_CFG setting because we're apparently supposed to set it again after
+		// clearing an interrupt.
+		int1_cfg = LIS3DH_INT1_CFG_YHIE_YUPE | LIS3DH_INT1_CFG_XHIE_XUPE;
+		writeRegister8(LIS3DH_REG_INT1CFG, int1_cfg);
+
+		// Clear the interrupt just in case
+		readRegister8(LIS3DH_REG_INT1SRC);
+	}
+	else {
+		int1_cfg = 0;
+		writeRegister8(LIS3DH_REG_INT1CFG, 0);
+	}
+
+	return true;
+}
+
+/**************************************************************************/
+/*!
+    @brief  When using setupLowPowerWakeMode to sleep until moved, this clears
+    the interrupt on the WKP pin. Manual reset mode is used so you can tell the
+    difference between timeout and movement wakeup when using stop mode sleep.
+*/
+/**************************************************************************/
+
+uint8_t Adafruit_LIS3DH::clearInterrupt() {
+	uint8_t int1_src = readRegister8(LIS3DH_REG_INT1SRC);
+
+	if (intPin >= 0) {
+		while(digitalRead(intPin) == HIGH) {
+			delay(10);
+			readRegister8(LIS3DH_REG_INT1SRC);
+			writeRegister8(LIS3DH_REG_INT1CFG, int1_cfg);
+		}
+	}
+
+	return int1_src;
+}
+
 
 /**************************************************************************/
 /*! 
@@ -944,17 +1031,15 @@ void Adafruit_LIS3DH::writeRegister8(uint8_t reg, uint8_t value) {
     Wire.write((uint8_t)value);
     Wire.endTransmission();
   } else {
-    if (_sck == -1)
-      //SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-      SPI.setBitOrder(MSBFIRST);
-      SPI.setClockSpeed(500000);
-      SPI.setDataMode(SPI_MODE0);
+	if (_sck == -1)
+	  beginTransaction();
+
     digitalWrite(_cs, LOW);
     spixfer(reg & ~0x80); // write, bit 7 low
     spixfer(value);
     digitalWrite(_cs, HIGH);
     if (_sck == -1)
-      SPI.end();              // release the SPI bus
+    	endTransaction();
   }
 }
 
@@ -974,20 +1059,27 @@ uint8_t Adafruit_LIS3DH::readRegister8(uint8_t reg) {
     Wire.requestFrom(_i2caddr, 1);
     value = Wire.read();
   }  else {
-    if (_sck == -1)
-      //SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-      SPI.setBitOrder(MSBFIRST);
-      SPI.setClockSpeed(500000);
-      SPI.setDataMode(SPI_MODE0);
-    digitalWrite(_cs, LOW);
+	if (_sck == -1)
+	  beginTransaction();
+
+	digitalWrite(_cs, LOW);
     spixfer(reg | 0x80); // read, bit 7 high
     value = spixfer(0);
     digitalWrite(_cs, HIGH);
     if (_sck == -1)
-      SPI.end();              // release the SPI bus
+    	endTransaction();
   }
   return value;
 }
 
+
+void Adafruit_LIS3DH::beginTransaction() {
+    SPI.setBitOrder(MSBFIRST);
+    SPI.setClockSpeed(500000);
+    SPI.setDataMode(SPI_MODE0);
+}
+
+void Adafruit_LIS3DH::endTransaction() {
+}
 
 
