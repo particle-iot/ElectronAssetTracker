@@ -1,6 +1,6 @@
 {
     "name": "AssetTracker",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "author": "Richard Whitney <richard@particle.io>",
     "license": "LGPL",
     "description": "Functions to make the Asset Tracker for Electron easy to use!"
