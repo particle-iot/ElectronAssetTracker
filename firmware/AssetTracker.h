@@ -26,7 +26,7 @@ class AssetTracker {
     readLatDeg(void),
     readLonDeg(void),
     readHDOP(void),
-    getAccuracy(void);
+    getGpsAccuracy(void);
 
   bool
     gpsFix(void);
