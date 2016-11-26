@@ -41,6 +41,15 @@ float AssetTracker::readLonDeg(){
     return gps.longitudeDegrees;
 }
 
+float AssetTracker::readHDOP(){
+    return gps.HDOP;
+}
+
+float AssetTracker::getAccuracy(){
+  // 1.8 taken from specs at https://learn.adafruit.com/adafruit-ultimate-gps/
+  return 1.8 * readHDOP();
+}
+
 String AssetTracker::readLatLon(){
     String latLon = String::format("%f,%f",gps.latitudeDegrees,gps.longitudeDegrees);
     return latLon;
