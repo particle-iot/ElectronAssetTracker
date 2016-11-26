@@ -50,10 +50,11 @@ float AssetTracker::getGpsAccuracy(){
   return 1.8 * readHDOP();
 }
 
-uint16_t AssetTracker::getGpsTimestamp(){
+uint32_t AssetTracker::getGpsTimestamp(){
   // Return timestamp in milliseconds, from last GPS reading
   // 0 if no reading has been done
-  return gps.milliseconds;
+  // (This returns the milliseconds of current day)
+  return gps.hour * 60 * 60 * 1000 + gps.minute * 60 * 1000 + gps.seconds * 1000 + gps.milliseconds;
 }
 
 String AssetTracker::readLatLon(){
