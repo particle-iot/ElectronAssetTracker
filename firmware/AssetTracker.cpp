@@ -50,6 +50,12 @@ float AssetTracker::getGpsAccuracy(){
   return 1.8 * readHDOP();
 }
 
+uint16_t AssetTracker::getGpsTimestamp(){
+  // Return timestamp in milliseconds, from last GPS reading
+  // 0 if no reading has been done
+  return gps.milliseconds;
+}
+
 String AssetTracker::readLatLon(){
     String latLon = String::format("%f,%f",gps.latitudeDegrees,gps.longitudeDegrees);
     return latLon;

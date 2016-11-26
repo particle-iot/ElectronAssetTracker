@@ -40,7 +40,8 @@ class AssetTracker {
     setupLowPowerWakeMode(uint8_t movementThreshold = 16);
   uint8_t
     clearAccelInterrupt();
-
+  uint16_t 
+    getGpsTimestamp();
 
  private:
 
