@@ -45,7 +45,7 @@ float AssetTracker::readHDOP(){
     return gps.HDOP;
 }
 
-float AssetTracker::getAccuracy(){
+float AssetTracker::getGpsAccuracy(){
   // 1.8 taken from specs at https://learn.adafruit.com/adafruit-ultimate-gps/
   return 1.8 * readHDOP();
 }
