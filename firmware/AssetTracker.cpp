@@ -41,6 +41,22 @@ float AssetTracker::readLonDeg(){
     return gps.longitudeDegrees;
 }
 
+float AssetTracker::readHDOP(){
+    return gps.HDOP;
+}
+
+float AssetTracker::getGpsAccuracy(){
+  // 1.8 taken from specs at https://learn.adafruit.com/adafruit-ultimate-gps/
+  return 1.8 * readHDOP();
+}
+
+uint32_t AssetTracker::getGpsTimestamp(){
+  // Return timestamp in milliseconds, from last GPS reading
+  // 0 if no reading has been done
+  // (This returns the milliseconds of current day)
+  return gps.hour * 60 * 60 * 1000 + gps.minute * 60 * 1000 + gps.seconds * 1000 + gps.milliseconds;
+}
+
 String AssetTracker::readLatLon(){
     String latLon = String::format("%f,%f",gps.latitudeDegrees,gps.longitudeDegrees);
     return latLon;

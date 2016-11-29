@@ -24,7 +24,10 @@ class AssetTracker {
     readLat(void),
     readLon(void),
     readLatDeg(void),
-    readLonDeg(void);
+    readLonDeg(void),
+    readHDOP(void),
+    getGpsAccuracy(void);
+
   bool
     gpsFix(void);
   char
@@ -37,7 +40,8 @@ class AssetTracker {
     setupLowPowerWakeMode(uint8_t movementThreshold = 16);
   uint8_t
     clearAccelInterrupt();
-
+  uint32_t 
+    getGpsTimestamp();
 
  private:
 
