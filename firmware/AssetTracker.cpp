@@ -72,7 +72,7 @@ void AssetTracker::gpsOn(){
     // Default is 1 Hz update rate
     gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
     delay(500);    
-    gps.sendCommand(PGCMD_NOANTENNA);
+    gps.sendCommand(PGCMD_ANTENNA);
     delay(500);
 }
 
