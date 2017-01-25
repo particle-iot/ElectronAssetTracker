@@ -1,11 +1,12 @@
+#ifndef AssetTracker_h
+#define AssetTracker_h
+
 #include "application.h"
 #include "math.h"
 
 #include "Adafruit_GPS.h"
 #include "Adafruit_LIS3DH.h"
 
-#ifndef AssetTracker_h
-#define AssetTracker_h
 
 class AssetTracker {
 
@@ -50,4 +51,4 @@ class AssetTracker {
 
 };
 
-#endif
+#endif // AssetTracker_h

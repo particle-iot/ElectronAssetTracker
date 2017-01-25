@@ -36,7 +36,6 @@ void setup() {
 	t.begin();
 }
 
-
 void loop() {
 
 	switch(state) {
@@ -78,8 +77,7 @@ void loop() {
 			// Wait for the publish to go out
 			stateTime = millis();
 			state = SLEEP_WAIT_STATE;
-		}
-		else {
+		} else {
 			// Haven't come online yet
 			if (millis() - stateTime >= MAX_TIME_TO_PUBLISH_MS) {
 				// Took too long to publish, just go to sleep
@@ -117,7 +115,5 @@ void loop() {
 		state = PUBLISH_STATE;
 		stateTime = millis();
 		break;
-
 	}
-
 }

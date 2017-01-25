@@ -39,10 +39,10 @@ FuelGauge fuel;
 void setup() {
     // Sets up all the necessary AssetTracker bits
     t.begin();
-    
+
     // Opens up a Serial port so you can listen over USB
     Serial.begin(9600);
-    
+
     // These three functions are useful for remote diagnostics. Read more below.
     Particle.function("aThresh",accelThresholder);
     Particle.function("tmode", transmitMode);
@@ -52,25 +52,25 @@ void setup() {
 // loop() runs continuously
 void loop() {
     // Check if there's been a big acceleration
-    if(t.readXYZmagnitude() > accelThreshold ){
+    if (t.readXYZmagnitude() > accelThreshold) {
         // Create a nice string with commas between x,y,z
-        String pubAccel = String::format("%d,%d,%d",t.readX(),t.readY(),t.readZ());
-        
+        String pubAccel = String::format("%d,%d,%d", t.readX(), t.readY(), t.readZ());
+
         // Send that acceleration to the serial port where it can be read by USB
         //Serial.println(pubAccel);
         Serial.println(t.readXYZmagnitude());
-        
+
         // If it's set to transmit AND it's been at least delayMinutes since the last one...
-        if(transmittingData && ((millis()-lastPublish) > (delayMinutes*60*1000))){
+        if (transmittingData && ((millis()-lastPublish) > (delayMinutes*60*1000))) {
             lastPublish = millis();
             Particle.publish("A", pubAccel, 60, PRIVATE);
         }
-        
+
     }
 }
 
 // Remotely change the trigger threshold!
-int accelThresholder(String command){
+int accelThresholder(String command) {
     accelThreshold = atoi(command);
     return 1;
 }
@@ -78,7 +78,7 @@ int accelThresholder(String command){
 // Allows you to remotely change whether a device is publishing to the cloud
 // or is only reporting data over Serial. Saves data when using only Serial!
 // Change the default at the top of the code.
-int transmitMode(String command){
+int transmitMode(String command) {
     transmittingData = atoi(command);
     return 1;
 }
@@ -86,18 +86,22 @@ int transmitMode(String command){
 // Lets you remotely check the battery status by calling the function "batt"
 // Triggers a publish with the info (so subscribe or watch the dashboard)
 // and also returns a '1' if there's >10% battery left and a '0' if below
-int batteryStatus(String command){
+int batteryStatus(String command) {
     // Publish the battery voltage and percentage of battery remaining
     // if you want to be really efficient, just report one of these
     // the String::format("%f.2") part gives us a string to publish,
     // but with only 2 decimal points to save space
-    Particle.publish("B", 
-          "v:" + String::format("%.2f",fuel.getVCell()) + 
+    Particle.publish("B",
+          "v:" + String::format("%.2f",fuel.getVCell()) +
           ",c:" + String::format("%.2f",fuel.getSoC()),
           60, PRIVATE
     );
     // if there's more than 10% of the battery left, then return 1
-    if(fuel.getSoC()>10){ return 1;} 
+    if (fuel.getSoC() > 10) {
+      return 1;
+
     // if you're running out of battery, return 0
-    else { return 0;}
+    } else {
+      return 0;
+    }
 }

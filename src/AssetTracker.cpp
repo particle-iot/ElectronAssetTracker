@@ -3,16 +3,14 @@
 
 //----------------- Tracker ----------------//
 
-//#define mySerial Serial1
-//Adafruit_GPS gps(&mySerial);
 Adafruit_GPS gps = Adafruit_GPS(&Serial1);
 Adafruit_LIS3DH accel = Adafruit_LIS3DH(A2);
 
-AssetTracker::AssetTracker(){
+AssetTracker::AssetTracker() {
 
 }
 
-void AssetTracker::begin(){
+void AssetTracker::begin() {
     accel.begin(LIS3DH_DEFAULT_ADDRESS);
 
     // Default to 5kHz low-power sampling
@@ -25,44 +23,44 @@ void AssetTracker::begin(){
     // gpsOn();
 }
 
-float AssetTracker::readLat(){
+float AssetTracker::readLat() {
     return gps.latitude;
 }
 
-float AssetTracker::readLon(){
+float AssetTracker::readLon() {
     return gps.longitude;
 }
 
-float AssetTracker::readLatDeg(){
+float AssetTracker::readLatDeg() {
     return gps.latitudeDegrees;
 }
 
-float AssetTracker::readLonDeg(){
+float AssetTracker::readLonDeg() {
     return gps.longitudeDegrees;
 }
 
-float AssetTracker::readHDOP(){
+float AssetTracker::readHDOP() {
     return gps.HDOP;
 }
 
-float AssetTracker::getGpsAccuracy(){
+float AssetTracker::getGpsAccuracy() {
   // 1.8 taken from specs at https://learn.adafruit.com/adafruit-ultimate-gps/
   return 1.8 * readHDOP();
 }
 
-uint32_t AssetTracker::getGpsTimestamp(){
+uint32_t AssetTracker::getGpsTimestamp() {
   // Return timestamp in milliseconds, from last GPS reading
   // 0 if no reading has been done
   // (This returns the milliseconds of current day)
   return gps.hour * 60 * 60 * 1000 + gps.minute * 60 * 1000 + gps.seconds * 1000 + gps.milliseconds;
 }
 
-String AssetTracker::readLatLon(){
+String AssetTracker::readLatLon() {
     String latLon = String::format("%f,%f",gps.latitudeDegrees,gps.longitudeDegrees);
     return latLon;
 }
 
-void AssetTracker::gpsOn(){
+void AssetTracker::gpsOn() {
     // Power to the GPS is controlled by a FET connected to D6
     pinMode(D6,OUTPUT);
     digitalWrite(D6,LOW);
@@ -76,19 +74,18 @@ void AssetTracker::gpsOn(){
     delay(500);
 }
 
-void AssetTracker::gpsOff(){
+void AssetTracker::gpsOff() {
     digitalWrite(D6,HIGH);
 }
 
-char* AssetTracker::preNMEA(){
+char* AssetTracker::preNMEA() {
     return gps.lastNMEA();
 }
 
-bool AssetTracker::gpsFix(){
-    if(gps.latitude == 0.0){
+bool AssetTracker::gpsFix() {
+    if (gps.latitude == 0.0) {
         return false;
-    }
-    else {
+    } else {
         return true;
     }
     //return gps.fix;
@@ -99,38 +96,38 @@ bool AssetTracker::gpsFix(){
 //     return c;
 // }
 
-void AssetTracker::updateGPS(){
-    char c = gps.read();
-      // if a sentence is received, we can check the checksum, parse it...
+void AssetTracker::updateGPS() {
+  char c = gps.read();
+  // if a sentence is received, we can check the checksum, parse it...
   if (gps.newNMEAreceived()) {
     // a tricky thing here is if we print the NMEA sentence, or data
     // we end up not listening and catching other sentences!
     // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
     //Serial.println(gps.lastNMEA());   // this also sets the newNMEAreceived() flag to false
 
-    if (!gps.parse(gps.lastNMEA()))   {
+    if (!gps.parse(gps.lastNMEA())) {
       // this also sets the newNMEAreceived() flag to false
       return;  // we can fail to parse a sentence in which case we should just wait for another
     }
   }
 }
 
-int AssetTracker::readX(){
+int AssetTracker::readX() {
     accel.read();
     return accel.x;
 }
 
-int AssetTracker::readY(){
+int AssetTracker::readY() {
     accel.read();
     return accel.y;
 }
 
-int AssetTracker::readZ(){
+int AssetTracker::readZ() {
     accel.read();
     return accel.z;
 }
 
-int AssetTracker::readXYZmagnitude(){
+int AssetTracker::readXYZmagnitude() {
     accel.read();
     int magnitude = sqrt((accel.x*accel.x)+(accel.y*accel.y)+(accel.z*accel.z));
     return magnitude;
