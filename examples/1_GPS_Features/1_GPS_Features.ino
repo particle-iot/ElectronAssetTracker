@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------
 This example shows a lot of different features. As configured here
-it'll check for a good GPS fix every 10 minutes and publish that data
-if there is one. If not, it'll save you data by staying quiet. It also
+it will check for a good GPS fix every 10 minutes and publish that data
+if there is one. If not, it will save you data by staying quiet. It also
 registers 3 Particle.functions for changing whether it publishes,
 reading the battery level, and manually requesting a GPS reading.
 ---------------------------------------------------------------*/
@@ -32,14 +32,14 @@ FuelGauge fuel;
 void setup() {
     // Sets up all the necessary AssetTracker bits
     t.begin();
-    
-    // Enable the GPS module. Defaults to off to save power. 
+
+    // Enable the GPS module. Defaults to off to save power.
     // Takes 1.5s or so because of delays.
     t.gpsOn();
-    
+
     // Opens up a Serial port so you can listen over USB
     Serial.begin(9600);
-    
+
     // These three functions are useful for remote diagnostics. Read more below.
     Particle.function("tmode", transmitMode);
     Particle.function("batt", batteryStatus);
@@ -52,22 +52,22 @@ void loop() {
     t.updateGPS();
 
     // if the current time - the last time we published is greater than your set delay...
-    if(millis()-lastPublish > delayMinutes*60*1000){
+    if (millis()-lastPublish > delayMinutes*60*1000) {
         // Remember when we published
         lastPublish = millis();
-        
-        //String pubAccel = String::format("%d,%d,%d",t.readX(),t.readY(),t.readZ());
+
+        //String pubAccel = String::format("%d,%d,%d", t.readX(), t.readY(), t.readZ());
         //Serial.println(pubAccel);
         //Particle.publish("A", pubAccel, 60, PRIVATE);
-        
+
         // Dumps the full NMEA sentence to serial in case you're curious
         Serial.println(t.preNMEA());
-        
+
         // GPS requires a "fix" on the satellites to give good data,
         // so we should only publish data if there's a fix
-        if(t.gpsFix()){
+        if (t.gpsFix()) {
             // Only publish if we're in transmittingData mode 1;
-            if(transmittingData){
+            if (transmittingData) {
                 // Short publish names save data!
                 Particle.publish("G", t.readLatLon(), 60, PRIVATE);
             }
@@ -80,22 +80,23 @@ void loop() {
 // Allows you to remotely change whether a device is publishing to the cloud
 // or is only reporting data over Serial. Saves data when using only Serial!
 // Change the default at the top of the code.
-int transmitMode(String command){
+int transmitMode(String command) {
     transmittingData = atoi(command);
     return 1;
 }
 
 // Actively ask for a GPS reading if you're impatient. Only publishes if there's
 // a GPS fix, otherwise returns '0'
-int gpsPublish(String command){
-    if(t.gpsFix()){ 
+int gpsPublish(String command) {
+    if (t.gpsFix()) {
         Particle.publish("G", t.readLatLon(), 60, PRIVATE);
-        
+
         // uncomment next line if you want a manual publish to reset delay counter
         // lastPublish = millis();
         return 1;
+    } else {
+      return 0;
     }
-    else { return 0; }
 }
 
 // Lets you remotely check the battery status by calling the function "batt"
@@ -106,13 +107,13 @@ int batteryStatus(String command){
     // if you want to be really efficient, just report one of these
     // the String::format("%f.2") part gives us a string to publish,
     // but with only 2 decimal points to save space
-    Particle.publish("B", 
-          "v:" + String::format("%.2f",fuel.getVCell()) + 
+    Particle.publish("B",
+          "v:" + String::format("%.2f",fuel.getVCell()) +
           ",c:" + String::format("%.2f",fuel.getSoC()),
           60, PRIVATE
     );
     // if there's more than 10% of the battery left, then return 1
-    if(fuel.getSoC()>10){ return 1;} 
+    if (fuel.getSoC()>10){ return 1;}
     // if you're running out of battery, return 0
     else { return 0;}
 }
