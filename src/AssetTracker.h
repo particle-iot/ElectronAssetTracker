@@ -30,20 +30,33 @@ class AssetTracker {
     readLatDeg(void),
     readLonDeg(void),
     readHDOP(void),
-    getGpsAccuracy(void);
-
+    getGpsAccuracy(void),
+    getSpeed(),
+    getGeoidheight(),
+    getAltitude();
   bool
+    antennaInternal(void),
+    antennaExternal(void),
     gpsFix(void);
   char
     checkGPS(void),
     *preNMEA(void);
   String
     readLatLon(void);
-
   bool
     setupLowPowerWakeMode(uint8_t movementThreshold = 16);
   uint8_t
+    getHour(),
+    getMinute(),
+    getSeconds(),
+    getYear(),
+    getMonth(),
+    getDay(),
+    getSatellites(),
+    getFixquality(),
     clearAccelInterrupt();
+  uint16_t
+    getMilliseconds();
   uint32_t
     getGpsTimestamp();
 

@@ -6,6 +6,9 @@
 Adafruit_GPS gps = Adafruit_GPS(&Serial1);
 Adafruit_LIS3DH accel = Adafruit_LIS3DH(A2);
 
+uint8_t internalANT[]={0xB5,0x62,0x06,0x13,0x04,0x00,0x00,0x00,0xF0,0x7D,0x8A,0x2A};
+uint8_t externalANT[]={0xB5,0x62,0x06,0x13,0x04,0x00,0x01,0x00,0xF0,0x7D,0x8B,0x2E};
+
 AssetTracker::AssetTracker() {
 
 }
@@ -55,6 +58,54 @@ uint32_t AssetTracker::getGpsTimestamp() {
   return gps.hour * 60 * 60 * 1000 + gps.minute * 60 * 1000 + gps.seconds * 1000 + gps.milliseconds;
 }
 
+uint8_t AssetTracker::getHour(){
+  return gps.hour;
+}
+
+uint8_t AssetTracker::getMinute(){ 
+  return gps.minute;
+}
+
+uint8_t AssetTracker::getSeconds(){
+  return gps.seconds;
+}
+
+uint16_t AssetTracker::getMilliseconds(){
+  return gps.milliseconds;
+}
+
+uint8_t AssetTracker::getYear(){
+  return gps.year; 
+}
+
+uint8_t AssetTracker::getMonth(){
+  return gps.month;
+}
+
+uint8_t AssetTracker::getDay(){
+  return gps.day;
+}
+
+uint8_t AssetTracker::getSatellites(){
+  return gps.satellites;
+}
+
+uint8_t AssetTracker::getFixquality(){
+  return gps.fixquality;
+}
+
+float AssetTracker::getSpeed(){
+  return gps.speed;
+}
+
+float AssetTracker::getGeoidheight(){
+  return gps.geoidheight;
+}
+
+float AssetTracker::getAltitude(){
+  return gps.altitude;
+}
+
 String AssetTracker::readLatLon() {
     String latLon = String::format("%f,%f",gps.latitudeDegrees,gps.longitudeDegrees);
     return latLon;
@@ -71,6 +122,13 @@ void AssetTracker::gpsOn() {
     gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
     delay(500);
     gps.sendCommand(PGCMD_NOANTENNA);
+    delay(500);
+    //for ublox maxm8 gps only
+    //internal antenna selected as default
+    for(uint8_t i=0;i<12;i++)
+    {
+        Serial1.write(internalANT[i]);
+    }
     delay(500);
 }
 
@@ -89,6 +147,26 @@ bool AssetTracker::gpsFix() {
         return true;
     }
     //return gps.fix;
+}
+
+bool AssetTracker::antennaInternal(){
+
+  for(uint8_t i=0;i<12;i++)
+    {
+        Serial1.write(internalANT[i]); //send the command to gps modul
+    }
+  return true;
+
+}
+
+bool AssetTracker::antennaExternal(){
+
+  for(uint8_t i=0;i<12;i++)
+    {
+        Serial1.write(externalANT[i]); //send the command to gps modul
+    }
+  return true;
+
 }
 
 // char AssetTracker::checkGPS(){
