@@ -62,7 +62,7 @@ uint8_t AssetTracker::getHour(){
   return gps.hour;
 }
 
-uint8_t AssetTracker::getMinute(){ 
+uint8_t AssetTracker::getMinute(){
   return gps.minute;
 }
 
@@ -75,7 +75,7 @@ uint16_t AssetTracker::getMilliseconds(){
 }
 
 uint8_t AssetTracker::getYear(){
-  return gps.year; 
+  return gps.year;
 }
 
 uint8_t AssetTracker::getMonth(){
@@ -90,7 +90,7 @@ uint8_t AssetTracker::getSatellites(){
   return gps.satellites;
 }
 
-uint8_t AssetTracker::getFixquality(){
+uint8_t AssetTracker::getFixQuality(){
   return gps.fixquality;
 }
 
@@ -98,7 +98,7 @@ float AssetTracker::getSpeed(){
   return gps.speed;
 }
 
-float AssetTracker::getGeoidheight(){
+float AssetTracker::getGeoIdHeight(){
   return gps.geoidheight;
 }
 
@@ -141,7 +141,7 @@ char* AssetTracker::preNMEA() {
 }
 
 bool AssetTracker::gpsFix() {
-    if (gps.latitude == 0.0) {
+    if ((gps.latitude == 0.0) || (gps.longitude == 0.0)){
         return false;
     } else {
         return true;
@@ -175,19 +175,26 @@ bool AssetTracker::antennaExternal(){
 // }
 
 void AssetTracker::updateGPS() {
-  char c = gps.read();
-  // if a sentence is received, we can check the checksum, parse it...
-  if (gps.newNMEAreceived()) {
-    // a tricky thing here is if we print the NMEA sentence, or data
-    // we end up not listening and catching other sentences!
-    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-    //Serial.println(gps.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-
-    if (!gps.parse(gps.lastNMEA())) {
-      // this also sets the newNMEAreceived() flag to false
-      return;  // we can fail to parse a sentence in which case we should just wait for another
+  //char c = gps.read();
+  // // if a sentence is received, we can check the checksum, parse it...
+  // if (gps.newNMEAreceived()) {
+  //   // a tricky thing here is if we print the NMEA sentence, or data
+  //   // we end up not listening and catching other sentences!
+  //   // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
+  //   //Serial.println(gps.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+  //
+  //   if (!gps.parse(gps.lastNMEA())) {
+  //     // this also sets the newNMEAreceived() flag to false
+  //     return;  // we can fail to parse a sentence in which case we should just wait for another
+  //   }
+  // }
+  //read the complete sentence
+  while (Serial1.available()) {
+        char c = gps.read();
+        if (gps.newNMEAreceived()) {
+            gps.parse(gps.lastNMEA());
+        }
     }
-  }
 }
 
 int AssetTracker::readX() {
@@ -212,9 +219,9 @@ int AssetTracker::readXYZmagnitude() {
 }
 
 bool AssetTracker::setupLowPowerWakeMode(uint8_t movementThreshold) {
-	return accel.setupLowPowerWakeMode(movementThreshold);
+    return accel.setupLowPowerWakeMode(movementThreshold);
 }
 
 uint8_t AssetTracker::clearAccelInterrupt() {
-	return accel.clearInterrupt();
+    return accel.clearInterrupt();
 }
