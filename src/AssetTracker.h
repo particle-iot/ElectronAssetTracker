@@ -32,7 +32,7 @@ class AssetTracker {
     readHDOP(void),
     getGpsAccuracy(void),
     getSpeed(),
-    getGeoidheight(),
+    getGeoIdHeight(),
     getAltitude();
   bool
     antennaInternal(void),
@@ -53,7 +53,7 @@ class AssetTracker {
     getMonth(),
     getDay(),
     getSatellites(),
-    getFixquality(),
+    getFixQuality(),
     clearAccelInterrupt();
   uint16_t
     getMilliseconds();
